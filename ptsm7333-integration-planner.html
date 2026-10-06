@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faith/Sports Integration Planner — PTSM 7333</title>
+<style>
+  :root {
+    --green: #154734; --gold: #FFB81C;
+    --ink: #12352a; --muted: #5f7068;
+    --soft-green: #e7f1ed; --soft-gold: #fff4d8; --line: #cfddd7;
+    --danger: #b42318; --danger-soft: #ffe5e2;
+    --success: #1f7a46; --success-soft: #e2f5e8;
+    --shadow: 0 22px 60px rgba(21, 71, 52, 0.16);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Proxima Nova", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at top left, rgba(255,184,28,0.28), transparent 30rem),
+      linear-gradient(135deg, #f7fbf8 0%, #eef7f3 100%);
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ---- Layout ------------------------------------------------------------
+     Phone-first single column. At the 1366x1366 LMS frame the container
+     widens and vertical rhythm tightens, so activities fit without the
+     retrofitted !important layer the previous course needed.              */
+  main {
+    width: min(100%, 46rem);
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 1.75rem) clamp(0.85rem, 3vw, 1.5rem) 1.25rem;
+  }
+  @media (min-width: 1100px) and (min-height: 900px) {
+    main { width: min(100%, 1180px); padding-top: 1rem; padding-bottom: 1rem; }
+    h1 { font-size: 1.7rem !important; margin-bottom: 0.25rem !important; }
+    .card { padding: 0.85rem 1.1rem; margin-bottom: 0.7rem; }
+    .lede { margin-bottom: 0.2rem; }
+    /* Opt-in helpers: an activity adds these to its own containers. */
+    .fit-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; align-items: start; }
+    .fit-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; align-items: start; }
+    .fit-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.55rem; align-items: start; }
+    .fit-2 > *, .fit-3 > *, .fit-4 > * { margin-bottom: 0 !important; }
+    .fit-span { grid-column: 1 / -1; }
+  }
+
+  /* Course banner. Decorative — alt="" and role="presentation" keep it out of
+     the accessibility tree, since it carries no information a student needs.
+     It scales with the container at its natural 20:3 ratio, so it costs about
+     177px of height in the wide frame and only ~56px on a phone. */
+  .course-banner {
+    display: block; width: 100%; height: auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: clamp(0.7rem, 2vw, 1rem);
+  }
+  @media (min-width: 1100px) and (min-height: 900px) {
+    .course-banner { margin-bottom: 0.55rem; }
+  }
+  @media print { .course-banner { display: none; } }
+
+  .card {
+    background: rgba(255,255,255,0.94);
+    border: 2px solid rgba(21,71,52,0.1);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: clamp(1rem, 3vw, 1.5rem);
+    margin-bottom: clamp(0.8rem, 2.2vw, 1.15rem);
+  }
+  .eyebrow {
+    display: inline-block; background: var(--soft-gold); color: var(--green);
+    font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; border-radius: 999px;
+    padding: 0.3rem 0.85rem; margin: 0 0 0.65rem;
+  }
+  h1 { color: var(--green); font-size: clamp(1.35rem, 4.5vw, 1.85rem); line-height: 1.2; margin: 0 0 0.5rem; }
+  h2 { color: var(--green); font-size: 1.1rem; margin: 0 0 0.5rem; }
+  h3 { color: var(--green); font-size: 0.98rem; margin: 0 0 0.35rem; }
+  p { line-height: 1.55; margin: 0 0 0.6rem; }
+  .lede { color: var(--muted); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 0.88rem; }
+
+  /* ---- Controls ---------------------------------------------------------- */
+  .btn {
+    min-height: 2.9rem; padding: 0 1.1rem;
+    border: 2px solid var(--green); border-radius: 8px;
+    background: #fff; color: var(--green);
+    font: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+    transition: background 150ms ease, color 150ms ease, opacity 150ms ease;
+  }
+  .btn:not(:disabled):hover, .btn:not(:disabled):focus-visible { background: var(--green); color: #fff; outline: none; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.primary { background: var(--gold); border-color: var(--gold); }
+  .btn.primary:not(:disabled):hover, .btn.primary:not(:disabled):focus-visible { background: var(--green); border-color: var(--green); color: #fff; }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.7rem; }
+  .controls .btn { flex: 1 1 10rem; }
+
+  select, input[type="text"], textarea {
+    font: inherit; color: var(--ink); background: #fff;
+    border: 2px solid var(--line); border-radius: 6px;
+    padding: 0.45rem 0.55rem; min-height: 2.6rem;
+  }
+  select:focus-visible, input:focus-visible, textarea:focus-visible,
+  button:focus-visible, [tabindex]:focus-visible, a:focus-visible {
+    outline: 3px solid var(--gold); outline-offset: 2px;
+  }
+
+  /* State signalling always pairs colour with a mark or text (WCAG 1.4.1). */
+  .is-correct { border-color: var(--success) !important; background: var(--success-soft); }
+  .is-wrong   { border-color: var(--danger) !important;  background: var(--danger-soft); }
+  .mark { font-weight: 900; margin-right: 0.3rem; }
+  .mark.ok { color: var(--success); }
+  .mark.no { color: var(--danger); }
+
+  .progress-track { height: 0.55rem; background: var(--soft-green); border-radius: 999px; overflow: hidden; margin-top: 0.6rem; }
+  .progress-fill { height: 100%; width: 0%; background: var(--green); transition: width 220ms ease; }
+
+  /* ---- Completion summary (must report what actually happened) ---------- */
+  #summary[hidden] { display: none; }
+  #summary { border-color: var(--success); }
+  #summary h2 { display: flex; align-items: center; gap: 0.4rem; }
+  .summary-score { font-size: 1.05rem; font-weight: 900; color: var(--green); margin: 0 0 0.6rem; }
+  .summary-list { margin: 0 0 0.6rem; padding-left: 1.1rem; }
+  .summary-list li { margin-bottom: 0.25rem; line-height: 1.45; }
+  .summary-group { margin-bottom: 0.7rem; }
+  .summary-group h3 { margin-bottom: 0.2rem; }
+
+  /* ---- Two-part activities ---------------------------------------------
+     Some modules combine two activities into one sequential experience.
+     Only one part is on screen at a time, so a merged activity costs no more
+     height than the taller of its two halves.                             */
+  .part-steps { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+  .part-step {
+    flex: 1 1 12rem; text-align: left;
+    border: 2px solid var(--line); border-radius: 8px;
+    background: rgba(255,255,255,0.9); color: var(--muted);
+    padding: 0.5rem 0.75rem; font: inherit; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; transition: border-color 150ms ease, color 150ms ease;
+  }
+  .part-step .part-n { display: block; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .part-step[aria-current="true"] { border-color: var(--green); color: var(--green); background: var(--soft-green); }
+  .part-step[data-state="done"] { border-color: var(--success); color: var(--success); }
+  .part-step[data-state="done"] .part-n::after { content: " ✓"; }
+  .part-step[data-state="locked"] { opacity: 0.55; cursor: not-allowed; }
+  .part-step[data-state="locked"] .part-n::after { content: " (locked)"; }
+  .part-panel[hidden] { display: none; }
+
+  .visually-hidden {
+    position: absolute !important; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ---- Finish bar -------------------------------------------------------- */
+  .finish-bar {
+    position: sticky; bottom: 0; z-index: 30;
+    padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+    background: rgba(247, 251, 248, 0.92);
+    backdrop-filter: blur(6px); border-top: 2px solid var(--line);
+  }
+  .finish-button {
+    display: block; width: min(100%, 22rem); margin: 0 auto; min-height: 3rem;
+    border: 2px solid var(--gold); border-radius: 8px;
+    background: var(--gold); color: var(--green);
+    font: inherit; font-weight: 900; font-size: 1.05rem; cursor: pointer;
+    transition: background 160ms ease, color 160ms ease, opacity 160ms ease;
+  }
+  .finish-button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .finish-button:not(:disabled):hover, .finish-button:not(:disabled):focus-visible {
+    background: var(--green); border-color: var(--green); color: #ffffff; outline: none;
+  }
+  @keyframes finish-pop { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+  .finish-button.enabled-pop { animation: finish-pop 600ms ease 2; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  @media (max-width: 520px) {
+    .controls { flex-direction: column; }
+    .controls .btn { flex: none; width: 100%; }
+    select, input[type="text"] { width: 100%; }
+  }
+
+.ip-progress { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
+.ip-progress .progress-track { flex: 1; }
+.ip-progress-label { font-size: 0.9rem; white-space: nowrap; }
+.ip-section h2 { margin-top: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ip-section h2 .ip-done { font-size: 0.85rem; font-weight: 600; color: var(--green); }
+.ip-section .hint { margin-top: 0; }
+.ip-field { margin-bottom: 12px; }
+.ip-field > label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
+.ip-field textarea, .ip-field select, .ip-field input[type="text"], .ip-field input[type="number"] { width: 100%; box-sizing: border-box; }
+.ip-field textarea { min-height: 84px; }
+.ip-count { font-size: 0.85rem; margin-top: 3px; min-height: 1.2em; }
+.ip-field.is-valid .ip-count { color: var(--green); }
+.ip-field.is-invalid .ip-count { color: #b3261e; }
+.ip-field.is-invalid textarea, .ip-field.is-invalid select, .ip-field.is-invalid > input, .ip-field.is-invalid .ip-row input { border-color: #b3261e; }
+.ip-rows { display: grid; gap: 6px; margin-bottom: 6px; }
+.ip-row { display: flex; gap: 6px; align-items: center; }
+.ip-row input { flex: 1; min-width: 0; box-sizing: border-box; }
+.ip-row .btn { padding: 4px 10px; font-size: 0.85rem; flex: 0 0 auto; }
+.ip-list-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ip-list-foot .btn { padding: 4px 12px; font-size: 0.9rem; }
+.ip-checks { list-style: none; padding: 0; margin: 0 0 6px; display: grid; gap: 6px; }
+.ip-checks li { display: flex; gap: 8px; align-items: flex-start; font-size: 0.95rem; }
+.ip-checks input { margin-top: 3px; flex: 0 0 auto; }
+.ip-status { font-size: 0.95rem; margin: 8px 0 0; }
+.ip-copy-out { width: 100%; box-sizing: border-box; min-height: 240px; margin-top: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; }
+.ip-closing { border-left: 4px solid var(--gold); }
+@media (min-width: 1100px) and (min-height: 900px) {
+  .ip-grid.fit-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .ip-grid.fit-2 > .card { margin: 0; }
+  .ip-fields.fit-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  .ip-checks.fit-2 { grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+}
+</style>
+</head>
+<body>
+<main>
+  
+  <header class="card">
+    <span class="eyebrow">PTSM 7333 · Faith and Sports Integration</span>
+    <h1>Plan an integration practice</h1>
+    <p class="lede">Six sections take you from context to proposal. Every section needs real content before Finish unlocks; the copy-out at the end drops straight into your Week 5 project proposal.</p>
+  </header>
+
+<div class="ip-progress" aria-label="Plan progress">
+  <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" aria-labelledby="ip-progress-label">
+    <div class="progress-fill" id="ip-progress-fill" style="width:0%"></div>
+  </div>
+  <span class="ip-progress-label" id="ip-progress-label">0 of 6 sections complete</span>
+</div>
+
+<div class="ip-grid fit-2" id="ip-sections"></div>
+
+<section class="card ip-section" aria-labelledby="ip-h-copy">
+  <h2 id="ip-h-copy">Copy my plan</h2>
+  <p class="hint">Assembles all six sections into plain text so you can paste it into your Faith/Sports Integration Project Proposal.</p>
+  <div class="controls">
+    <button type="button" class="btn primary" id="ip-copy-btn">Copy my plan</button>
+  </div>
+  <label for="ip-copy-out" class="visually-hidden">Assembled integration plan (plain text)</label>
+  <textarea class="ip-copy-out" id="ip-copy-out" readonly aria-describedby="ip-copy-msg"></textarea>
+  <p class="ip-status" id="ip-copy-msg" role="status"></p>
+</section>
+
+<section class="card ip-closing" aria-labelledby="ip-h-close">
+  <h2 id="ip-h-close">Before you go</h2>
+  <p>Integration is a practice before it is a program. If the SWOT and the theology don't show up in Section 4, go back.</p>
+</section>
+
+  <section id="summary" class="card" hidden aria-labelledby="summary-heading">
+    <h2 id="summary-heading">How you did</h2>
+    <p class="summary-score" id="summary-score"></p>
+    <div id="summary-detail"></div>
+    <p class="hint" id="summary-note"></p>
+  </section>
+</main>
+
+<div id="live-region" class="visually-hidden" role="status" aria-live="polite"></div>
+
+<footer class="finish-bar">
+  <button type="button" id="finish-button" class="finish-button" disabled>Finish</button>
+</footer>
+
+<script>
+/* ---- SCORM 1.2 wrapper. Degrades silently to standalone preview. -------- */
+const SCORM = (() => {
+  let api = null, initialized = false, finished = false;
+  function findApi(win) {
+    let current = win, attempts = 0;
+    try {
+      while (current && !current.API && current.parent && current.parent !== current && attempts < 500) {
+        attempts += 1; current = current.parent;
+      }
+      if (current && current.API) return current.API;
+      if (win.opener && !win.opener.closed) return findApi(win.opener);
+    } catch (e) { return null; }
+    return null;
+  }
+  function call(method, ...args) {
+    if (!api || typeof api[method] !== "function") return "false";
+    try { return api[method](...args); } catch (e) { return "false"; }
+  }
+  function init() {
+    if (initialized) return true;
+    api = findApi(window);
+    if (!api) return false;
+    initialized = call("LMSInitialize", "") === "true";
+    if (initialized) {
+      const prior = call("LMSGetValue", "cmi.core.lesson_status");
+      if (prior !== "completed" && prior !== "passed") {
+        call("LMSSetValue", "cmi.core.lesson_status", "incomplete");
+      }
+      call("LMSSetValue", "cmi.core.score.min", "0");
+      call("LMSSetValue", "cmi.core.score.max", "100");
+      call("LMSCommit", "");
+    }
+    return initialized;
+  }
+  function setScore(raw) {
+    if (!initialized) return;
+    call("LMSSetValue", "cmi.core.score.raw", String(raw));
+    call("LMSCommit", "");
+  }
+  function finishActivity(score) {
+    if (finished) return;
+    if (initialized) {
+      call("LMSSetValue", "cmi.core.lesson_status", "completed");
+      if (score !== null && score !== undefined) call("LMSSetValue", "cmi.core.score.raw", String(score));
+      call("LMSCommit", "");
+      call("LMSFinish", "");
+    }
+    finished = true;
+  }
+  function unloadSafety() {
+    if (finished || !initialized) return;
+    call("LMSCommit", ""); call("LMSFinish", ""); finished = true;
+  }
+  window.addEventListener("pagehide", unloadSafety);
+  window.addEventListener("beforeunload", unloadSafety);
+  return { init, setScore, finishActivity };
+})();
+SCORM.init();
+
+/* ---- Activity API -------------------------------------------------------
+   The only surface an activity script needs. Handles the Finish button,
+   the live region, the score, and the completion summary, so no activity
+   re-implements them (or gets them subtly wrong).                        */
+const Activity = (() => {
+  const finishBtn = document.getElementById("finish-button");
+  const live = document.getElementById("live-region");
+  const summaryEl = document.getElementById("summary");
+  const scoreEl = document.getElementById("summary-score");
+  const detailEl = document.getElementById("summary-detail");
+  const noteEl = document.getElementById("summary-note");
+  let firstScore = null;   // frozen on first completion so review passes can't inflate it
+  let ready = false;
+
+  function announce(msg) { live.textContent = ""; setTimeout(() => { live.textContent = msg; }, 40); }
+
+  function setReady(on, msg) {
+    ready = !!on;
+    finishBtn.disabled = !ready;
+    if (ready) {
+      finishBtn.classList.add("enabled-pop");
+      setTimeout(() => finishBtn.classList.remove("enabled-pop"), 1400);
+      if (msg) announce(msg);
+    }
+  }
+
+  /* Report the truth: right and missed are arrays of plain strings.
+     Passing neither still renders an honest "you finished" line.        */
+  function summarize({ score = null, right = [], missed = [], note = "" } = {}) {
+    if (firstScore === null && score !== null) firstScore = score;
+    const shown = firstScore === null ? null : firstScore;
+    if (shown !== null) {
+      const total = right.length + missed.length;
+      scoreEl.textContent = total
+        ? `${right.length} of ${total} correct on your first attempt — ${shown}%`
+        : `First-attempt score: ${shown}%`;
+    } else {
+      scoreEl.textContent = "Activity complete.";
+    }
+    detailEl.innerHTML = "";
+    const group = (title, items, cls) => {
+      if (!items.length) return;
+      const wrap = document.createElement("div");
+      wrap.className = "summary-group";
+      const h = document.createElement("h3");
+      h.innerHTML = `<span class="mark ${cls === "ok" ? "ok" : "no"}">${cls === "ok" ? "✓" : "✗"}</span>${title}`;
+      const ul = document.createElement("ul");
+      ul.className = "summary-list";
+      items.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+      wrap.appendChild(h); wrap.appendChild(ul); detailEl.appendChild(wrap);
+    };
+    group(`You got these right (${right.length})`, right, "ok");
+    group(`You missed these (${missed.length})`, missed, "no");
+    noteEl.textContent = note || "";
+    summaryEl.hidden = false;
+    summaryEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (shown !== null) SCORM.setScore(shown);
+  }
+
+  finishBtn.addEventListener("click", () => {
+    if (!ready) return;
+    SCORM.finishActivity(firstScore);
+    finishBtn.disabled = true;
+    finishBtn.textContent = "Finished ✓";
+    announce("Activity finished and reported as complete.");
+  });
+
+  return { setReady, announce, summarize, get score() { return firstScore; } };
+})();
+
+/* ---- Multi-part coordinator --------------------------------------------
+   For modules that merge two activities into one. Each part reports here
+   instead of calling Activity.setReady / Activity.summarize itself, and only
+   the last part to finish unlocks Finish. Without this, part one would enable
+   the Finish button and a student could submit half an activity.         */
+const Parts = (() => {
+  let expected = 0;
+  const results = new Map();
+  const listeners = [];
+
+  function expect(n) { expected = n; }
+  function isDone(i) { return results.has(i); }
+  function onDone(fn) { listeners.push(fn); }
+
+  function done(index, { score = null, right = [], missed = [], label = "" } = {}) {
+    if (results.has(index)) return;                 // first result stands
+    results.set(index, { score, right, missed, label });
+    listeners.forEach(fn => { try { fn(index); } catch (e) {} });
+    if (results.size < expected) {
+      Activity.announce(`Part ${index} complete. Part ${index + 1} is now available.`);
+      return;
+    }
+    // Merge both parts' results, keeping each item attributed to its part so
+    // the summary says which half a student actually struggled with.
+    // NB: these locals must NOT be named `right` / `missed` — those are already
+    // bound by this function's destructured parameter, and redeclaring them with
+    // const is a SyntaxError that kills the whole inline script silently.
+    const allRight = [], allMissed = [];
+    let weighted = 0, items = 0;
+    [...results.entries()].sort((a, b) => a[0] - b[0]).forEach(([i, r]) => {
+      const tag = r.label ? `${r.label}: ` : `Part ${i}: `;
+      r.right.forEach(t => allRight.push(tag + t));
+      r.missed.forEach(t => allMissed.push(tag + t));
+      const n = r.right.length + r.missed.length;
+      if (r.score !== null && n) { weighted += r.score * n; items += n; }
+      else if (r.score !== null) { weighted += r.score; items += 1; }
+    });
+    const finalScore = items ? Math.round(weighted / items) : null;
+    Activity.setReady(true, "Both parts complete. You can finish the activity.");
+    Activity.summarize({
+      score: finalScore, right: allRight, missed: allMissed,
+      note: "This activity had two parts; the summary above covers both.",
+    });
+  }
+  return { expect, done, isDone, onDone };
+})();
+
+(function () {
+  var sections = [
+    { id: 'context', name: 'Context', twoCol: true,
+      explainer: 'Name the real team, program, or ministry you are designing for.',
+      fields: [
+        { type: 'short', id: 'ctx-name', label: 'Team/program/ministry name' },
+        { type: 'select', id: 'ctx-level', label: 'Level', placeholder: '— choose a level —',
+          options: ['youth', 'high school', 'college', 'club/adult', 'professional', 'parachurch'] },
+        { type: 'short', id: 'ctx-role', label: 'Your role there' },
+        { type: 'text', id: 'ctx-who', label: 'Who the practice is for', help: 'the players, the coaches, the parents — be specific', min: 20, span: true } ] },
+    { id: 'swot', name: 'Sportsperson SWOT', span: true, twoCol: true,
+      explainer: 'Week 1 activity. Think about the people, not the program — what do they bring, what do they struggle with, what is opening up for them, what could derail them?',
+      fields: [
+        { type: 'list', id: 'swot-s', label: 'Strengths', min: 2 },
+        { type: 'list', id: 'swot-w', label: 'Weaknesses', min: 2 },
+        { type: 'list', id: 'swot-o', label: 'Opportunities', min: 2 },
+        { type: 'list', id: 'swot-t', label: 'Threats', min: 2 } ] },
+    { id: 'theology', name: 'Theological basis',
+      explainer: 'Ground the practice in the tradition before you design it.',
+      fields: [
+        { type: 'text', id: 'theo-basis', label: 'What does the Christian tradition say to this context — about the body, competition, identity, rest, teammates? Cite at least one reading or speaker from the course by name.', min: 40 },
+        { type: 'select', id: 'theo-posture', label: 'Primary integration posture', placeholder: '— choose a posture —',
+          options: ['formation of character', 'witness/evangelism', 'care and presence', 'justice and access', 'rest and Sabbath', 'play and joy'] } ] },
+    { id: 'practice', name: 'The practice', span: true, twoCol: true,
+      explainer: 'A practice is something people do, together, repeatedly — not a message they hear once.',
+      fields: [
+        { type: 'short', id: 'prac-name', label: 'Name of the practice' },
+        { type: 'short', id: 'prac-leader', label: 'Who leads it' },
+        { type: 'list', id: 'prac-steps', label: 'What happens, step by step', min: 3, span: true },
+        { type: 'select', id: 'prac-freq', label: 'Frequency', placeholder: '— choose a frequency —',
+          options: ['once', 'weekly', 'each game/match', 'season-long', 'one-off retreat'] },
+        { type: 'number', id: 'prac-time', label: 'Time cost per occurrence (minutes)', minVal: 5, maxVal: 240 } ] },
+    { id: 'insideout', name: 'InSideOut lens',
+      explainer: 'Look inward first, then outward, then at the evidence.',
+      fields: [
+        { type: 'text', id: 'io-inside', label: 'Inside: what interior change in the sportsperson does this practice aim at?', min: 25 },
+        { type: 'text', id: 'io-out', label: 'Out: what will be visible in how they play, lead, or treat others?', min: 25 },
+        { type: 'text', id: 'io-signs', label: 'What would tell you it\'s working — and what would tell you it\'s doing harm (moralism, pressure, exclusion)?', min: 25 } ] },
+    { id: 'check', name: 'Proposal check', span: true,
+      explainer: 'Every box must be honestly true before this goes into your proposal.',
+      checks: { id: 'check-items', label: 'Proposal checklist (all 6 required)', items: [
+        'The practice is possible without me present',
+        'It respects players who don\'t share the faith',
+        'It costs less time than it gives back',
+        'A coach or leader has agreed to it (or I know who to ask)',
+        'It has a start date and an end-of-season review',
+        'I can explain it to a parent in two sentences' ] },
+      fields: [
+        { type: 'text', id: 'check-explain', label: 'Your two-sentence explanation to a parent, and one sentence on what you\'ll change after the first month.', min: 30 } ] }
+  ];
+
+  var valid = {};          // fieldId -> boolean
+  var listSeq = {};        // listId -> next row number (ids stay stable after removals)
+  var summarized = false;
+  var wasReady = false;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function wordCount(s) { var t = s.trim(); return t ? t.split(/\s+/).length : 0; }
+  function fieldsOf(fn) { sections.forEach(function (s) { s.fields.forEach(function (f) { fn(f, s); }); }); }
+
+  // ---------- Render ----------
+  var html = '';
+  sections.forEach(function (s, i) {
+    html += '<section class="card ip-section' + (s.span ? ' fit-span' : '') + '" id="sec-' + s.id + '" aria-labelledby="ip-h-' + s.id + '">';
+    html += '<h2 id="ip-h-' + s.id + '">' + (i + 1) + '. ' + esc(s.name) + ' <span class="ip-done" id="done-' + s.id + '"></span></h2>';
+    html += '<p class="hint">' + esc(s.explainer) + '</p>';
+    if (s.checks) {
+      var c = s.checks;
+      html += '<fieldset class="ip-field" id="wrap-' + c.id + '" style="border:0;padding:0;margin:0 0 12px;"><legend style="font-weight:600;font-size:0.95rem;margin-bottom:4px;">' + esc(c.label) + '</legend>';
+      html += '<ul class="ip-checks fit-2">';
+      c.items.forEach(function (label, k) {
+        var cid = c.id + '-' + k;
+        html += '<li><input type="checkbox" id="' + cid + '"><label for="' + cid + '">' + esc(label) + '</label></li>';
+      });
+      html += '</ul><div class="ip-count" id="count-' + c.id + '" aria-live="polite"></div></fieldset>';
+    }
+    html += '<div class="ip-fields' + (s.twoCol ? ' fit-2' : '') + '">';
+    s.fields.forEach(function (f) {
+      html += '<div class="ip-field' + (f.span ? ' fit-span' : '') + '" id="wrap-' + f.id + '">';
+      if (f.type === 'text') {
+        html += '<label for="' + f.id + '">' + esc(f.label) + (f.help ? ' <span class="hint">(' + esc(f.help) + ')</span>' : '') + '</label><textarea id="' + f.id + '" rows="3" aria-describedby="count-' + f.id + '"></textarea>';
+        html += '<div class="ip-count" id="count-' + f.id + '" aria-live="polite">0 words (at least ' + f.min + ' required)</div>';
+      } else if (f.type === 'short') {
+        html += '<label for="' + f.id + '">' + esc(f.label) + '</label><input type="text" id="' + f.id + '" autocomplete="off" aria-describedby="count-' + f.id + '">';
+        html += '<div class="ip-count" id="count-' + f.id + '" aria-live="polite">Required</div>';
+      } else if (f.type === 'number') {
+        html += '<label for="' + f.id + '">' + esc(f.label) + '</label><input type="number" id="' + f.id + '" min="' + f.minVal + '" max="' + f.maxVal + '" step="1" inputmode="numeric" aria-describedby="count-' + f.id + '">';
+        html += '<div class="ip-count" id="count-' + f.id + '" aria-live="polite">Required — ' + f.minVal + ' to ' + f.maxVal + ' minutes</div>';
+      } else if (f.type === 'select') {
+        html += '<label for="' + f.id + '">' + esc(f.label) + '</label><select id="' + f.id + '" aria-describedby="count-' + f.id + '"><option value="">' + esc(f.placeholder) + '</option>';
+        f.options.forEach(function (o) { html += '<option value="' + esc(o) + '">' + esc(o) + '</option>'; });
+        html += '</select><div class="ip-count" id="count-' + f.id + '" aria-live="polite">Required</div>';
+      } else if (f.type === 'list') {
+        html += '<label id="label-' + f.id + '">' + esc(f.label) + ' <span class="hint">(at least ' + f.min + ')</span></label>';
+        html += '<div class="ip-rows" id="rows-' + f.id + '" role="group" aria-labelledby="label-' + f.id + '"></div>';
+        html += '<div class="ip-list-foot"><button type="button" class="btn" id="add-' + f.id + '">Add item</button><span class="ip-count" id="count-' + f.id + '" aria-live="polite"></span></div>';
+      }
+      html += '</div>';
+    });
+    html += '</div></section>';
+  });
+  $('ip-sections').innerHTML = html;
+
+  // ---------- List builders ----------
+  function addRow(f, focus) {
+    var n = listSeq[f.id] = (listSeq[f.id] || 0) + 1;
+    var rid = f.id + '-' + n;
+    var row = document.createElement('div');
+    row.className = 'ip-row';
+    row.innerHTML = '<label for="' + rid + '" class="visually-hidden">' + esc(f.label) + ' item ' + n + '</label>' +
+      '<input type="text" id="' + rid + '" autocomplete="off">' +
+      '<button type="button" class="btn" aria-label="Remove ' + esc(f.label) + ' item ' + n + '">Remove</button>';
+    var input = row.querySelector('input');
+    input.addEventListener('input', function () { validateList(f); update(); });
+    row.querySelector('button').addEventListener('click', function () {
+      var rows = $('rows-' + f.id);
+      if (rows.children.length <= 1) { input.value = ''; validateList(f); update(); return; }
+      var next = row.nextElementSibling || row.previousElementSibling;
+      rows.removeChild(row);
+      validateList(f); update();
+      if (next) next.querySelector('input').focus(); else $('add-' + f.id).focus();
+      Activity.announce('Item removed.');
+    });
+    $('rows-' + f.id).appendChild(row);
+    if (focus) input.focus();
+  }
+
+  function listValues(f) {
+    var out = [];
+    var inputs = $('rows-' + f.id).querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) { var v = inputs[i].value.trim(); if (v) out.push(v); }
+    return out;
+  }
+
+  function validateList(f) {
+    var n = listValues(f).length, wrap = $('wrap-' + f.id), cnt = $('count-' + f.id);
+    wrap.classList.remove('is-valid', 'is-invalid');
+    if (n === 0) { valid[f.id] = false; cnt.textContent = '0 of ' + f.min + ' items'; return; }
+    if (n < f.min) { valid[f.id] = false; wrap.classList.add('is-invalid'); cnt.textContent = '✗ ' + n + ' of ' + f.min + ' — add ' + (f.min - n) + ' more'; return; }
+    valid[f.id] = true; wrap.classList.add('is-valid'); cnt.textContent = '✓ ' + n + ' item' + (n === 1 ? '' : 's');
+  }
+
+  // ---------- Text / short / number / select ----------
+  function validateText(f) {
+    var ta = $(f.id), wrap = $('wrap-' + f.id), cnt = $('count-' + f.id);
+    var n = wordCount(ta.value);
+    wrap.classList.remove('is-valid', 'is-invalid');
+    if (n === 0) { valid[f.id] = false; cnt.textContent = '0 words (at least ' + f.min + ' required)'; return; }
+    if (n < f.min) { valid[f.id] = false; wrap.classList.add('is-invalid'); cnt.textContent = '✗ ' + n + ' word' + (n === 1 ? '' : 's') + ' — need ' + (f.min - n) + ' more'; return; }
+    valid[f.id] = true; wrap.classList.add('is-valid'); cnt.textContent = '✓ ' + n + ' words';
+  }
+
+  function validateShort(f) {
+    var el = $(f.id), wrap = $('wrap-' + f.id), cnt = $('count-' + f.id);
+    wrap.classList.remove('is-valid', 'is-invalid');
+    if (!el.value.trim()) { valid[f.id] = false; cnt.textContent = 'Required'; return; }
+    valid[f.id] = true; wrap.classList.add('is-valid'); cnt.textContent = '✓ Entered';
+  }
+
+  function validateNumber(f) {
+    var el = $(f.id), wrap = $('wrap-' + f.id), cnt = $('count-' + f.id);
+    var raw = el.value.trim(), n = raw === '' ? NaN : Number(raw);
+    wrap.classList.remove('is-valid', 'is-invalid');
+    if (raw === '') { valid[f.id] = false; cnt.textContent = 'Required — ' + f.minVal + ' to ' + f.maxVal + ' minutes'; return; }
+    if (isNaN(n) || n < f.minVal || n > f.maxVal) { valid[f.id] = false; wrap.classList.add('is-invalid'); cnt.textContent = '✗ Enter a number between ' + f.minVal + ' and ' + f.maxVal; return; }
+    valid[f.id] = true; wrap.classList.add('is-valid'); cnt.textContent = '✓ ' + n + ' minutes';
+  }
+
+  function validateSelect(f) {
+    var sel = $(f.id), wrap = $('wrap-' + f.id), cnt = $('count-' + f.id);
+    wrap.classList.remove('is-valid', 'is-invalid');
+    if (!sel.value) { valid[f.id] = false; cnt.textContent = 'Required'; return; }
+    valid[f.id] = true; wrap.classList.add('is-valid'); cnt.textContent = '✓ Selected';
+  }
+
+  function validateChecks(c) {
+    var wrap = $('wrap-' + c.id), cnt = $('count-' + c.id), n = 0, total = c.items.length;
+    for (var k = 0; k < total; k++) { if ($(c.id + '-' + k).checked) n++; }
+    wrap.classList.remove('is-valid', 'is-invalid');
+    if (n === total) { valid[c.id] = true; wrap.classList.add('is-valid'); cnt.textContent = '✓ All ' + total + ' confirmed'; return; }
+    valid[c.id] = false;
+    if (n > 0) wrap.classList.add('is-invalid');
+    cnt.textContent = (n > 0 ? '✗ ' : '') + n + ' of ' + total + ' confirmed — all ' + total + ' required';
+  }
+
+  // ---------- Progress and readiness ----------
+  function sectionDone(s) {
+    if (s.checks && !valid[s.checks.id]) return false;
+    for (var i = 0; i < s.fields.length; i++) { if (!valid[s.fields[i].id]) return false; }
+    return true;
+  }
+
+  function update() {
+    var done = 0;
+    sections.forEach(function (s) {
+      var ok = sectionDone(s);
+      if (ok) done++;
+      $('done-' + s.id).textContent = ok ? '✓ complete' : '';
+    });
+    var pct = Math.round(done / sections.length * 100);
+    $('ip-progress-fill').style.width = pct + '%';
+    $('ip-progress-label').textContent = done + ' of ' + sections.length + ' sections complete';
+    document.querySelector('.ip-progress .progress-track').setAttribute('aria-valuenow', String(done));
+
+    var ready = done === sections.length;
+    if (ready) {
+      if (!wasReady) {
+        Activity.setReady(true, 'All 6 sections complete. Copy your plan, then select Finish.');
+        Activity.announce('All 6 sections complete. Finish is now enabled.');
+        if (!summarized) {
+          summarized = true;
+          Activity.summarize({
+            score: null,
+            right: sections.map(function (s) { return s.name; }),
+            missed: [],
+            note: 'Copy your plan into the Faith/Sports Integration Project Proposal.'
+          });
+        }
+      }
+      wasReady = true;
+    } else {
+      if (wasReady) { Activity.setReady(false); Activity.announce('A section is no longer complete. Finish is disabled until every section meets its minimum.'); }
+      wasReady = false;
+    }
+  }
+
+  // ---------- Copy my plan ----------
+  function assembleText() {
+    var lines = ['FAITH/SPORTS INTEGRATION PLAN — PTSM 7333', ''];
+    sections.forEach(function (s, i) {
+      lines.push((i + 1) + '. ' + s.name.toUpperCase());
+      if (s.checks) {
+        lines.push(s.checks.label + ':');
+        s.checks.items.forEach(function (label, k) {
+          lines.push('  [' + ($(s.checks.id + '-' + k).checked ? 'x' : ' ') + '] ' + label);
+        });
+      }
+      s.fields.forEach(function (f) {
+        if (f.type === 'list') {
+          lines.push(f.label + ':');
+          var vals = listValues(f);
+          if (!vals.length) lines.push('  (none)');
+          vals.forEach(function (v, k) { lines.push('  ' + (k + 1) + '. ' + v); });
+        } else if (f.type === 'number') {
+          var v = $(f.id).value.trim();
+          lines.push(f.label + ': ' + (v ? v + ' minutes' : '(blank)'));
+        } else if (f.type === 'text') {
+          lines.push(f.label + ':');
+          lines.push('  ' + ($(f.id).value.trim() || '(blank)'));
+        } else {
+          lines.push(f.label + ': ' + ($(f.id).value.trim() || '(blank)'));
+        }
+      });
+      lines.push('');
+    });
+    return lines.join('\n');
+  }
+
+  $('ip-copy-btn').addEventListener('click', function () {
+    var out = $('ip-copy-out'), msg = $('ip-copy-msg');
+    out.value = assembleText();
+    var copied = false;
+    try { out.focus(); out.select(); if (document.execCommand) copied = document.execCommand('copy'); } catch (e) { copied = false; }
+    msg.textContent = copied ? '✓ Copied to your clipboard. Paste it into your Faith/Sports Integration Project Proposal.' : 'Your plan is assembled below. Select all the text in the box and copy it (Ctrl+C or Cmd+C).';
+    Activity.announce(msg.textContent);
+  });
+
+  // ---------- Wire events and initial state ----------
+  sections.forEach(function (s) {
+    if (s.checks) {
+      s.checks.items.forEach(function (label, k) {
+        $(s.checks.id + '-' + k).addEventListener('change', function () { validateChecks(s.checks); update(); });
+      });
+      validateChecks(s.checks);
+    }
+  });
+  fieldsOf(function (f) {
+    if (f.type === 'text') { $(f.id).addEventListener('input', function () { validateText(f); update(); }); validateText(f); }
+    else if (f.type === 'short') { $(f.id).addEventListener('input', function () { validateShort(f); update(); }); validateShort(f); }
+    else if (f.type === 'number') { $(f.id).addEventListener('input', function () { validateNumber(f); update(); }); validateNumber(f); }
+    else if (f.type === 'select') { $(f.id).addEventListener('change', function () { validateSelect(f); update(); }); validateSelect(f); }
+    else if (f.type === 'list') {
+      for (var i = 0; i < f.min; i++) addRow(f, false);
+      $('add-' + f.id).addEventListener('click', function () { addRow(f, true); validateList(f); update(); });
+      validateList(f);
+    }
+  });
+  update();
+})();
+</script>
+</body>
+</html>
